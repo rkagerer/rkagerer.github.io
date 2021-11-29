@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Penalty Timer</title>
+    <script>    
+      const seconds_per_tap = 5;
+      const max_penalty_seconds = 60;
+      const short_vibrate = 25;
+      const long_vibrate = 500;
+      const seconds_of_decimals = 2; // last n seconds shown in decimal
+      const timer_callback_ms = 50;
+    	var timerId = null;
+    	var nextPenalty = [0, 0];
+      var remaining = [0, 0];
+      var elapseAt = [null, null];
+      var divTeamContainers, divPlusButtons, divMinusButtons, divStartButtons, spanNextPenalties, spanRemainings;
+
+      function updateLabels() {
+      	for (var i = 0; i <= 1; i++) {        	        
+      		spanNextPenalties[i].textContent = nextPenalty[i];
+        	spanRemainings[i].textContent = remaining[i];
+        }
+      }
+      function addPenalty(team, taps) {
+      	var idx = (team == "A") ? 0 : 1;
+        nextPenalty[idx] += taps * seconds_per_tap;
+        if (nextPenalty[idx] < 0) nextPenalty[idx] = 0;
+        if (nextPenalty[idx] > max_penalty_seconds) nextPenalty[idx] = max_penalty_seconds;
+        updateLabels();
+        navigator.vibrate(short_vibrate);
+      }
+      function applyPenalty(team) {
+      	var idx = (team == "A") ? 0 : 1;
+        elapseAt[idx] = Date.now() + nextPenalty[idx] * 1000;
+      	remaining[idx] = nextPenalty[idx];
+        nextPenalty[idx] = 0;        
+        updateLabels();
+        enableTimer(true);
+      	navigator.vibrate(short_vibrate);
+      }
+      function enableTimer(state) {
+        if (state == false && timerId != null) { clearInterval(timerId); timerId = null; }
+      	if (state == true && timerId == null) { timerId = setInterval(timerCallback, timer_callback_ms); }
+      }
+      function handleTimer(idx, dtNow) {
+        if (elapseAt[idx] != null) {
+        	if (dtNow >= elapseAt[idx]) {
+          	elapseAt[idx] = null;
+            remaining[idx] = 0;
+            return true;
+          } else {
+          	remaining[idx] = (elapseAt[idx] - dtNow) / 1000;
+            remaining[idx] = remaining[idx].toFixed(remaining[idx] > seconds_of_decimals ? 0 : 1);
+            return false;
+          }
+        }
+      }
+      function timerCallback() {
+      	var dtNow = Date.now();
+      	var blinkA = false, blinkB = false;
+        blinkA = handleTimer(0, dtNow);
+        blinkB = handleTimer(1, dtNow);
+        if (elapseAt[0] == null && elapseAt[1] == null) { enableTimer(false); }
+        updateLabels();
+        if (blinkA || blinkB) { navigator.vibrate(long_vibrate); }
+      }
+      
+      function getElements() {
+				divTeamContainers = [document.getElementById("teamContainerA"), document.getElementById("teamContainerB")];
+        divPlusButtons = [document.getElementById("plusButtonA"), document.getElementById("plusButtonB")];
+        divMinusButtons = [document.getElementById("minusButtonA"), document.getElementById("minusButtonB")];
+        divStartButtons = [document.getElementById("divStartA"), document.getElementById("divStartB")];
+        spanNextPenalties = [document.getElementById("spanNextPenaltyA"), document.getElementById("spanNextPenaltyB")];
+        spanRemainings = [document.getElementById("spanRemainingA"), document.getElementById("spanRemainingB")];
+      }
+      function init() {
+      	nextPenalty[0] = 5;
+        getElements();
+        resize();
+      	updateLabels();        
+      }
+    </script>
+    <style>
+      html, body {
+        height:100%;
+        width:100%;
+        padding:0;
+        margin:0;
+        background-color:black;
+        overflow:hidden;
+      }
+      body {
+        display:flex;
+        row-gap:2%;
+        column-gap:2%;
+      }
+      .teamContainer {
+        font-family:Verdana;
+        color:white;
+        text-align:center;
+        margin:0;
+        display:flex;
+        flex-direction:column;
+        /*justify-content: space-between;*/
+        row-gap: 6%;
+        font-size: max(3.8vw, 3.8vh);
+        overflow:hidden;
+      }
+      .left {
+        background-color:purple;
+      }
+      .right {
+        background-color:teal;
+      }
+      .section {
+        display:flex;
+        flex-direction:column;
+        justify-content: center;
+        align-content:center;
+      }
+      .titleSection {
+        height:12%;
+        font-size: max(3vw, 3vh);
+      }
+      .nextPenaltySection {
+        height:38%;
+        display:flex;
+        margin-top:-4%;
+      }
+      .applySection {
+        height:23%;
+        margin-top:3%;
+        display:flex;
+        flex-direction:row;
+        justify-content:center;
+        
+      }
+      .remainingSection {
+        height:10%;
+      }
+      .nextPenaltyLabel {
+        height:40%;
+        display:flex;
+        align-items:center;
+        text-align:center;
+        justify-content:center;
+      }
+      .buttonRow {
+        display:flex;
+        flex-direction:row;
+        justify-content:center;
+        column-gap:15%;
+        height:60%;
+      }
+      .button {
+        min-width:35%;
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        padding:5px;
+        font-weight: 800;
+        white-space: nowrap;
+        vertical-align: middle;
+        -ms-touch-action: manipulation;
+        touch-action: manipulation;
+        cursor: pointer;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+        background-image: none;
+        border: 2px solid transparent;
+        border-radius: 5%;
+        text-decoration: none;
+        color: #333;
+        background-color: white;
+        border-color: #ccc;
+        font-size: max(7vw, 7vh);
+      }
+      .startButton {
+        width:50%;
+        margin-left:5%;
+        margin-right:5%;
+      }
+      .down {
+        width:10%;
+        display:inline-flex;
+        justify-content:center;
+        align-items:center;
+        margin-top:-2%;
+        font-size: max(6vw, 6vh);
+        font-weight: 900;
+        transform:scale(1.5, 1.0);
+      }
+      .plusMinusButton {
+        font-size: max(8vw, 8vh);
+      }
+      @media (orientation: landscape) {
+        body {
+          flex-direction:row;
+        }
+        .teamContainer {
+          width:50%;
+          height:100%;
+        }
+      }
+      @media (orientation: portrait) {
+        body {
+          flex-direction:column;
+        }
+        .teamContainer {
+          width:100%;
+          height:50%;
+        }
+      }
+    </style>
+  </head>
+  <body onload="init()" onresize="resize()">
+  
+      <div id="teamContainerA" class="teamContainer left">
+        <div class="section titleSection">RESCUE 1 BAY</div>
+        <div class="section nextPenaltySection">
+          <div class="nextPenaltyLabel">Next Penalty:&nbsp;<span id="spanNextPenaltyA">0</span>&nbsp;seconds</div>
+          <div class="buttonRow">
+            <div id="plusButtonA" class="button plusMinusButton" onclick="addPenalty('A', 1)">+</div>
+            <div id="minusButtonA" class="button plusMinusButton" onclick="addPenalty('A', -1)">−</div>
+          </div>
+        </div>
+        <div class="section applySection">
+          <div class="down">↓</div><div id="divStartA" class="button startButton" onclick="applyPenalty('A')">Start</div><div class="down">↓</div>
+        </div>
+        <div class="section remainingSection">
+          <div>
+            Remaining:&nbsp;<span id="spanRemainingA">0</span>&nbsp;seconds
+          </div>
+        </div>
+      </div>
+
+      <div id="teamContainerB" class="teamContainer right">
+        <div class="section titleSection">ENGINE 1 BAY</div>
+        <div class="section nextPenaltySection">
+          <div class="nextPenaltyLabel">Next Penalty:&nbsp;<span id="spanNextPenaltyB">0</span>&nbsp;seconds</div>
+          <div class="buttonRow">
+            <div id="plusButtonB" class="button plusMinusButton" onclick="addPenalty('B', 1)">+</div>
+            <div id="minusButtonB" class="button plusMinusButton" onclick="addPenalty('B', -1)">−</div>
+          </div>
+        </div>
+        <div class="section applySection">
+          <div class="down">↓</div><div id="divStartB" class="button startButton" onclick="applyPenalty('B')">Start</div><div class="down">↓</div>
+        </div>
+        <div class="section remainingSection">
+          <div>
+            Remaining:&nbsp;<span id="spanRemainingB">0</span>&nbsp;seconds
+          </div>        
+        </div>
+      </div>
+
+  </body>
+</html>
