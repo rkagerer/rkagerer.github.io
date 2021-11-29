@@ -81,11 +81,11 @@
       function scrollToBottom() {
         var scrollingElement = (document.scrollingElement || document.body);
 				scrollingElement.scrollTop = scrollingElement.scrollHeight;
+        
       }
       function init() {
       	nextPenalty[0] = 5;
         getElements();
-        resize();
       	updateLabels();
         scrollToBottom();
       }
@@ -224,7 +224,7 @@
       }
     </style>
   </head>
-  <body onload="init()" onresize="resize()">
+  <body onload="init()">
   
       <div id="teamContainerA" class="teamContainer left">
         <div class="section titleSection">RESCUE 1 BAY</div>
