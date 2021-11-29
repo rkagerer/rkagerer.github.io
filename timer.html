@@ -80,14 +80,13 @@
       }
       function scrollToBottom() {
         var scrollingElement = (document.scrollingElement || document.body);
-				scrollingElement.scrollTop = scrollingElement.scrollHeight;
-        
+        scrollingElement.scrollTop = scrollingElement.scrollHeight;
       }
       function init() {
       	nextPenalty[0] = 5;
         getElements();
       	updateLabels();
-        scrollToBottom();
+        //scrollToBottom();
       }
     </script>
     <style>
