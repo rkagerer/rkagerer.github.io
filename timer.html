@@ -78,11 +78,16 @@
         spanNextPenalties = [document.getElementById("spanNextPenaltyA"), document.getElementById("spanNextPenaltyB")];
         spanRemainings = [document.getElementById("spanRemainingA"), document.getElementById("spanRemainingB")];
       }
+      function scrollToBottom() {
+        var scrollingElement = (document.scrollingElement || document.body);
+				scrollingElement.scrollTop = scrollingElement.scrollHeight;
+      }
       function init() {
       	nextPenalty[0] = 5;
         getElements();
         resize();
-      	updateLabels();        
+      	updateLabels();
+        scrollToBottom();
       }
     </script>
     <style>
@@ -92,9 +97,7 @@
         padding:0;
         margin:0;
         background-color:black;
-        /*overflow:hidden;*/
       }
-      /*html { height: 100vh; }*/
       body {
         display:flex;
         row-gap:2%;
