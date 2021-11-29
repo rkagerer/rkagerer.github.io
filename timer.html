@@ -42,6 +42,7 @@
         nextPenalty[idx] = 0;
         updateLabels();
         divRemainingSections[idx].style.color = timerActiveColor;
+        divRemainingSections[idx].style.fontWeight = 600;
         enableTimer(true);
       	navigator.vibrate(short_vibrate);
       }
@@ -68,7 +69,10 @@
         blinkA = handleTimer(0, dtNow);
         blinkB = handleTimer(1, dtNow);
         for (var i = 0; i <= 1; i++) {
-          if (elapseAt[i] == null) divRemainingSections[i].style.color = "";
+          if (elapseAt[i] == null) {
+          	divRemainingSections[i].style.color = "";
+          	divRemainingSections[i].style.fontWeight = "";
+          }
         }
         if (elapseAt[0] == null && elapseAt[1] == null) {
         	enableTimer(false);
@@ -119,18 +123,16 @@
         flex-direction:column;
         /*justify-content: space-between;*/
         row-gap: 6%;
-        font-size: max(3.8vw, 3.8vh);
+        font-size: max(3.6vw, 3.6vh);
         overflow:hidden;
       }
       .left {
-        kbackground-color:#1561A3;
-        kbackground: #1561A3;
-        background: linear-gradient(-45deg, #130B48, #1561A3); /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
+        background: #1561A3;
+        background: linear-gradient(-45deg, #130B48, #1561A3);
       }
       .right {
-        kbackground-color:#4E774E;
-        kbackground: #4E774E;  /* fallback for old browsers */
-        background: linear-gradient(-45deg, #0C480E, #118A0F); /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
+        background: #118A0F;
+        background: linear-gradient(-45deg, #0C480E, #118A0F);
       }
       .section {
         display:flex;
@@ -178,7 +180,7 @@
         align-items:center;
         justify-content:center;
         padding:5px;
-        font-weight: 800;
+        font-weight: 600;
         white-space: nowrap;
         vertical-align: middle;
         -ms-touch-action: manipulation;
