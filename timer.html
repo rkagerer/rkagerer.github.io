@@ -14,7 +14,7 @@
       const long_vibrate = 500;
       const seconds_of_decimals = 2; // last n seconds shown in decimal
       const timer_callback_ms = 50;
-      const timerActiveColor = "gold";
+      const timerActiveColor = "yellow";
     	var timerId = null;
     	var nextPenalty = [0, 0];
       var remaining = [0, 0];
@@ -123,10 +123,14 @@
         overflow:hidden;
       }
       .left {
-        background-color:#581085;
+        kbackground-color:#1561A3;
+        kbackground: #1561A3;
+        background: linear-gradient(-45deg, #130B48, #1561A3); /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
       }
       .right {
-        background-color:#06555e;
+        kbackground-color:#4E774E;
+        kbackground: #4E774E;  /* fallback for old browsers */
+        background: linear-gradient(-45deg, #0C480E, #118A0F); /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
       }
       .section {
         display:flex;
