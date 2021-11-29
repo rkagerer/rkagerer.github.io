@@ -14,11 +14,12 @@
       const long_vibrate = 500;
       const seconds_of_decimals = 2; // last n seconds shown in decimal
       const timer_callback_ms = 50;
+      const timerActiveColor = "gold";
     	var timerId = null;
     	var nextPenalty = [0, 0];
       var remaining = [0, 0];
       var elapseAt = [null, null];
-      var divTeamContainers, divPlusButtons, divMinusButtons, divStartButtons, spanNextPenalties, spanRemainings;
+      var divTeamContainers, divPlusButtons, divMinusButtons, divStartButtons, divRemainingSections, spanNextPenalties, spanRemainings;
 
       function updateLabels() {
       	for (var i = 0; i <= 1; i++) {        	        
@@ -38,8 +39,9 @@
       	var idx = (team == "A") ? 0 : 1;
         elapseAt[idx] = Date.now() + nextPenalty[idx] * 1000;
       	remaining[idx] = nextPenalty[idx];
-        nextPenalty[idx] = 0;        
+        nextPenalty[idx] = 0;
         updateLabels();
+        divRemainingSections[idx].style.color = timerActiveColor;
         enableTimer(true);
       	navigator.vibrate(short_vibrate);
       }
@@ -65,7 +67,12 @@
       	var blinkA = false, blinkB = false;
         blinkA = handleTimer(0, dtNow);
         blinkB = handleTimer(1, dtNow);
-        if (elapseAt[0] == null && elapseAt[1] == null) { enableTimer(false); }
+        for (var i = 0; i <= 1; i++) {
+          if (elapseAt[i] == null) divRemainingSections[i].style.color = "";
+        }
+        if (elapseAt[0] == null && elapseAt[1] == null) {
+        	enableTimer(false);
+        }
         updateLabels();
         if (blinkA || blinkB) { navigator.vibrate(long_vibrate); }
       }
@@ -75,6 +82,7 @@
         divPlusButtons = [document.getElementById("plusButtonA"), document.getElementById("plusButtonB")];
         divMinusButtons = [document.getElementById("minusButtonA"), document.getElementById("minusButtonB")];
         divStartButtons = [document.getElementById("divStartA"), document.getElementById("divStartB")];
+        divRemainingSections = [document.getElementById("remainingSectionA"), document.getElementById("remainingSectionB")];
         spanNextPenalties = [document.getElementById("spanNextPenaltyA"), document.getElementById("spanNextPenaltyB")];
         spanRemainings = [document.getElementById("spanRemainingA"), document.getElementById("spanRemainingB")];
       }
@@ -115,10 +123,10 @@
         overflow:hidden;
       }
       .left {
-        background-color:purple;
+        background-color:#581085;
       }
       .right {
-        background-color:teal;
+        background-color:#06555e;
       }
       .section {
         display:flex;
@@ -237,7 +245,7 @@
         <div class="section applySection">
           <div class="down">↓</div><div id="divStartA" class="button startButton" onclick="applyPenalty('A')">Start</div><div class="down">↓</div>
         </div>
-        <div class="section remainingSection">
+        <div id="remainingSectionA" class="section remainingSection">
           <div>
             Remaining:&nbsp;<span id="spanRemainingA">0</span>&nbsp;seconds
           </div>
@@ -256,7 +264,7 @@
         <div class="section applySection">
           <div class="down">↓</div><div id="divStartB" class="button startButton" onclick="applyPenalty('B')">Start</div><div class="down">↓</div>
         </div>
-        <div class="section remainingSection">
+        <div id="remainingSectionB" class="section remainingSection">
           <div>
             Remaining:&nbsp;<span id="spanRemainingB">0</span>&nbsp;seconds
           </div>        
