@@ -14,13 +14,19 @@
       const long_vibrate = 500;
       const seconds_of_decimals = 2; // last n seconds shown in decimal
       const timer_callback_ms = 50;
-      const timerActiveColor = "yellow";
+      const timerActiveColor = "gold";
+      const blink_color = "darkred";
+      const blink_count = 20; // put in double the number you want + 2
+      const blink_delay_ms = 80;
+      var blinkTimerId = null, blinks = [0, 0];
+      var orgBackcolor;
     	var timerId = null;
     	var nextPenalty = [0, 0];
       var remaining = [0, 0];
       var elapseAt = [null, null];
       var divTeamContainers, divPlusButtons, divMinusButtons, divStartButtons, divRemainingSections, spanNextPenalties, spanRemainings;
-
+      var audioCtx = null, audioCtxTries = 0;
+            
       function updateLabels() {
       	for (var i = 0; i <= 1; i++) {        	        
       		spanNextPenalties[i].textContent = nextPenalty[i];
@@ -33,7 +39,11 @@
         if (nextPenalty[idx] < 0) nextPenalty[idx] = 0;
         if (nextPenalty[idx] > max_penalty_seconds) nextPenalty[idx] = max_penalty_seconds;
         updateLabels();
-        navigator.vibrate(short_vibrate);
+        try { navigator.vibrate(short_vibrate); } catch (err) {}
+        if (audioCtx == null && audioCtxTries < 2) {
+        	audioCtxTries++;
+        	audioCtx = new (window.AudioContext || window.webkitAudioContext || window.audioContext);          
+        }
       }
       function applyPenalty(team) {
       	var idx = (team == "A") ? 0 : 1;
@@ -42,19 +52,33 @@
         nextPenalty[idx] = 0;
         updateLabels();
         divRemainingSections[idx].style.color = timerActiveColor;
-        divRemainingSections[idx].style.fontWeight = 600;
         enableTimer(true);
-      	navigator.vibrate(short_vibrate);
+      	try { navigator.vibrate(short_vibrate); } catch (err) {}
       }
       function enableTimer(state) {
         if (state == false && timerId != null) { clearInterval(timerId); timerId = null; }
       	if (state == true && timerId == null) { timerId = setInterval(timerCallback, timer_callback_ms); }
+      }      
+      function enableBlinkTimer(state) {
+        if (state == false && blinkTimerId != null) {
+          clearInterval(blinkTimerId);
+          blinkTimerId = null;
+          blinks[0] = 0; blinks[1] = 0;
+          divTeamContainers[0].style.backgroundColor = orgBackcolor[0];
+          divTeamContainers[1].style.backgroundColor = orgBackcolor[1];
+        }
+        if (state == true && blinkTimerId == null) {
+          blinkTimerId = setInterval(blinkTimerCallback, blink_delay_ms);
+        }
       }
+      
       function handleTimer(idx, dtNow) {
         if (elapseAt[idx] != null) {
         	if (dtNow >= elapseAt[idx]) {
           	elapseAt[idx] = null;
             remaining[idx] = 0;
+            blinks[idx] = blink_count;
+            divTeamContainers[idx].style.backgroundColor = blink_color;
             return true;
           } else {
           	remaining[idx] = (elapseAt[idx] - dtNow) / 1000;
@@ -69,18 +93,31 @@
         blinkA = handleTimer(0, dtNow);
         blinkB = handleTimer(1, dtNow);
         for (var i = 0; i <= 1; i++) {
-          if (elapseAt[i] == null) {
-          	divRemainingSections[i].style.color = "";
-          	divRemainingSections[i].style.fontWeight = "";
-          }
+          if (elapseAt[i] == null) divRemainingSections[i].style.color = "";
         }
         if (elapseAt[0] == null && elapseAt[1] == null) {
         	enableTimer(false);
         }
         updateLabels();
-        if (blinkA || blinkB) { navigator.vibrate(long_vibrate); }
+        if (blinkA || blinkB) {
+        	enableBlinkTimer(true);
+        	try { navigator.vibrate(long_vibrate); } catch (err) {}
+          try { beep(); } catch (err) {}
+        }
       }
-      
+      function blinkTimerCallback() {
+        for (var i = 0; i <= 1; i++) {
+          if (blinks[i] > 0) {
+            blinks[i]--;
+            if (blinks[i] == 0) {
+              divTeamContainers[i].style.backgroundColor = orgBackcolor[i];
+            } else {
+              divTeamContainers[i].style.backgroundColor = (blinks[i] % 2 == 0) ? orgBackcolor[i] : blink_color;
+            }
+          }
+        }
+        if (blinks[0] == 0 && blinks[1] == 0) { enableBlinkTimer(false); }
+      }      
       function getElements() {
 				divTeamContainers = [document.getElementById("teamContainerA"), document.getElementById("teamContainerB")];
         divPlusButtons = [document.getElementById("plusButtonA"), document.getElementById("plusButtonB")];
@@ -95,11 +132,36 @@
         scrollingElement.scrollTop = scrollingElement.scrollHeight;
       }
       function init() {
-      	nextPenalty[0] = 5;
+      	nextPenalty[0] = 0;
         getElements();
+        orgBackcolor = [divTeamContainers[0].style.backgroundColor, divTeamContainers[1].style.backgroundColor];
       	updateLabels();
         scrollToBottom();
       }
+      
+     
+      //All arguments are optional:
+      //duration of the tone in milliseconds. Default is 500
+      //frequency of the tone in hertz. default is 440
+      //volume of the tone. Default is 1, off is 0.
+      //type of tone. Possible values are sine, square, sawtooth, triangle, and custom. Default is sine.
+      //callback to use on end of tone
+      function beep(duration, frequency, volume, type, callback) {
+        var oscillator = audioCtx.createOscillator();
+        var gainNode = audioCtx.createGain();
+
+        oscillator.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+
+        if (volume){gainNode.gain.value = volume;}
+        if (frequency){oscillator.frequency.value = frequency;}
+        if (type){oscillator.type = type;}
+        if (callback){oscillator.onended = callback;}
+
+        oscillator.start(audioCtx.currentTime);
+        oscillator.stop(audioCtx.currentTime + ((duration || 500) / 1000));
+      };      
+      
     </script>
     <style>
       html, body {
@@ -123,16 +185,14 @@
         flex-direction:column;
         /*justify-content: space-between;*/
         row-gap: 6%;
-        font-size: max(3.6vw, 3.6vh);
+        font-size: max(3.8vw, 3.8vh);
         overflow:hidden;
       }
       .left {
-        background: #1561A3;
-        background: linear-gradient(-45deg, #130B48, #1561A3);
+        background-color:#581085;
       }
       .right {
-        background: #118A0F;
-        background: linear-gradient(-45deg, #0C480E, #118A0F);
+        background-color:#06555e;
       }
       .section {
         display:flex;
@@ -180,7 +240,7 @@
         align-items:center;
         justify-content:center;
         padding:5px;
-        font-weight: 600;
+        font-weight: 800;
         white-space: nowrap;
         vertical-align: middle;
         -ms-touch-action: manipulation;
